@@ -1,43 +1,45 @@
-
 <?php
 include 'config.php';
 session_start();
 
 if(isset($_POST['submit'])){
+    // Step 1: Take raw input from user
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // ✅ Step 1: Prepare the SQL statement (with placeholders)
-    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
+    // Step 2: Construct SQL query by directly injecting user input
+    // ⚠️ WARNING: This is vulnerable to SQL injection
+    $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
 
-    // ✅ Step 2: Bind the parameters to the placeholders
-    $stmt->bind_param("ss", $username, $password); // 'ss' means two strings
+    // Step 3: Debug output to see final SQL query (for learning only)
+    echo "<strong>Executed SQL:</strong> $query<br><br>";
 
-    // ✅ Step 3: Execute the statement
-    $stmt->execute();
+    // Step 4: Execute query
+    $result = mysqli_query($conn, $query);
 
-    // ✅ Step 4: Get the result set from the executed statement
-    $result = $stmt->get_result();
-
-    // ✅ Step 5: Check if a matching user was found
-    if($result->num_rows > 0){
-        $_SESSION['username'] = $username;
-        echo "✅ Logged in successfully. Redirecting...";
-        header('Location: vote.php');
+    // Step 5: If query fails (invalid SQL), show error
+    if(!$result){
+        echo "SQL Error: " . mysqli_error($conn);
         exit;
+    }
+
+    // Step 6: If query returns a row, user is logged in
+    if(mysqli_num_rows($result) > 0){
+        echo "<h3>✅ Logged in as: $username</h3>";
+        echo "<h4>Showing all returned users:</h4>";
+        while($row = mysqli_fetch_assoc($result)) {
+            echo "🧑‍💻 ID: " . $row["id"] . " | Username: " . $row["username"] . " | Password: " . $row["password"] . "<br>";
+        }
     } else {
         echo "<div class='error'>❌ Invalid Credentials!</div>";
     }
-
-    // ✅ Step 6: Close the statement
-    $stmt->close();
 }
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Secure Login</title>
+    <title>Voting System Login (Insecure)</title>
     <style>
         body {
             background: linear-gradient(to bottom right, #f0f8ff, #dceeff);
@@ -53,7 +55,7 @@ if(isset($_POST['submit'])){
             padding: 40px 50px;
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 100, 0.15);
-            width: 320px;
+            width: 350px;
             text-align: center;
         }
         h2 {
@@ -91,10 +93,10 @@ if(isset($_POST['submit'])){
 </head>
 <body>
     <div class="login-container">
-        <h2>Login Page (Secure)</h2>
+        <h2>Login to Voting System</h2>
         <form method="post">
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
+            <input type="text" name="username" placeholder="Username"><br>
+            <input type="text" name="password" placeholder="Password"><br>
             <input type="submit" name="submit" value="Login">
         </form>
     </div>
