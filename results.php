@@ -1,6 +1,5 @@
-<?php include 'config.php'; ?>
-
-<?php
+<?php include 'config.php'; 
+include 'navbar.php'; 
 // Fetch candidates sorted by vote count DESC
 $results = $conn->query("
     SELECT candidates.name, COUNT(votes.id) as vote_count 
@@ -25,13 +24,13 @@ while ($row = $results->fetch_assoc()) {
             background: #f2f6ff;
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
-            padding: 30px;
         }
 
         h2 {
             text-align: center;
             color: #0033cc;
             margin-bottom: 30px;
+            margin-top: 2em;
         }
 
         .container {

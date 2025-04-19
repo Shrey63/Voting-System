@@ -1,4 +1,5 @@
 <?php
+include 'navbar.php'; 
 include 'config.php';
 session_start();
 
@@ -43,7 +44,7 @@ $candidates = $conn->query("SELECT * FROM candidates");
             background: linear-gradient(to right, #e6f2ff, #ffffff);
             font-family: 'Segoe UI', sans-serif;
             margin: 0;
-            padding: 20px;
+            /* padding: 20px; */
         }
 
         h2 {
@@ -111,7 +112,9 @@ $candidates = $conn->query("SELECT * FROM candidates");
         .top-bar {
             text-align: center;
             margin-bottom: 10px;
-            font-size: 18px;
+            font-size: 25px;
+            margin-top: 2em;
+            font-weight: bold;
         }
 
         .top-bar span {
@@ -123,7 +126,7 @@ $candidates = $conn->query("SELECT * FROM candidates");
 <body>
 
 <div class="top-bar">
-    Welcome, <span><?php echo htmlspecialchars($username); ?></span>! Cast your vote below.
+    Welcome, <span><?php echo htmlspecialchars($username); ?></span>!
 </div>
 
 <h2>Vote for a Candidate</h2>
