@@ -2,103 +2,183 @@
 include 'config.php';
 session_start();
 
+$show_form = true;
+$show_table = false;
+$table_data = [];
+
 if(isset($_POST['submit'])){
-    // Step 1: Take raw input from user
     $username = $_POST['username'];
     $password = $_POST['password'];
-
-    // Step 2: Construct SQL query by directly injecting user input
-    // ⚠️ WARNING: This is vulnerable to SQL injection
+    
     $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
-
-    // Step 3: Debug output to see final SQL query (for learning only)
-    echo "<strong>Executed SQL:</strong> $query<br><br>";
-
-    // Step 4: Execute query
     $result = mysqli_query($conn, $query);
 
-    // Step 5: If query fails (invalid SQL), show error
     if(!$result){
         echo "SQL Error: " . mysqli_error($conn);
         exit;
     }
 
-    // Step 6: If query returns a row, user is logged in
-    if(mysqli_num_rows($result) > 0){
-        echo "<h3>✅ Logged in as: $username</h3>";
-        echo "<h4>Showing all returned users:</h4>";
-        while($row = mysqli_fetch_assoc($result)) {
-            echo "🧑‍💻 ID: " . $row["id"] . " | Username: " . $row["username"] . " | Password: " . $row["password"] . "<br>";
+    $row_count = mysqli_num_rows($result);
+
+    if($row_count > 0){
+        if($row_count === 1){
+            $_SESSION['username'] = $username;
+            header("Location: vote.php");
+            exit;
+        } else {
+            $show_form = false;
+            $show_table = true;
+            while($row = mysqli_fetch_assoc($result)) {
+                $table_data[] = $row;
+            }
         }
     } else {
-        echo "<div class='error'>❌ Invalid Credentials!</div>";
+        $error = "❌ Invalid Credentials!";
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Voting System Login (Insecure)</title>
+    <meta charset="UTF-8">
+    <title>Insecure Login</title>
     <style>
-        body {
-            background: linear-gradient(to bottom right, #f0f8ff, #dceeff);
+        * {
+            box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            height: 100vh;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
         }
-        .login-container {
+
+        body {
+            background: linear-gradient(to bottom right, #eaf4ff, #d9e8f5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
             background-color: white;
-            padding: 40px 50px;
+            padding: 2rem;
             border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 100, 0.15);
-            width: 350px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
             text-align: center;
         }
+
         h2 {
-            color: #0044cc;
-            margin-bottom: 25px;
+            color: #034efc;
+            margin-bottom: 1.5rem;
         }
+
         input[type="text"],
         input[type="password"] {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #b0cfff;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 1rem;
         }
+
         input[type="submit"] {
             width: 100%;
-            background-color: #0044cc;
-            color: white;
-            padding: 12px;
+            padding: 0.75rem;
+            background-color: #034efc;
             border: none;
+            color: white;
+            font-size: 1rem;
             border-radius: 6px;
-            font-size: 16px;
             cursor: pointer;
+            transition: background 0.3s ease;
         }
+
         input[type="submit"]:hover {
-            background-color: #0033aa;
+            background-color: #003bd4;
         }
+
         .error {
-            margin-top: 20px;
+            margin-top: 1rem;
             color: red;
-            font-weight: bold;
         }
+
+        .warning {
+            background-color: #ffe4e1;
+            padding: 1rem;
+            margin-top: 2rem;
+            border: 1px solid #f5c2c2;
+            border-radius: 8px;
+            color: #a94442;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 1rem;
+            border-collapse: collapse;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f7ff;
+            color: #034efc;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login to Voting System</h2>
+    <div class="container">
+        <h2>Login Page</h2>
+
+        <?php if(isset($error)): ?>
+            <div class="error"><?= $error ?></div>
+        <?php endif; ?>
+
+        <?php if($show_form): ?>
         <form method="post">
-            <input type="text" name="username" placeholder="Username"><br>
-            <input type="text" name="password" placeholder="Password"><br>
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="text" name="password" placeholder="Password" required>
             <input type="submit" name="submit" value="Login">
         </form>
+        <?php endif; ?>
+
+        <?php if($show_table): ?>
+            <div class="warning">
+                ⚠️ Multiple users matched! Possible SQL Injection detected.<br>
+                Fetched <strong><?= count($table_data) ?></strong> records:
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($table_data as $user): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($user['id']) ?></td>
+                            <td><?= htmlspecialchars($user['username']) ?></td>
+                            <td><?= htmlspecialchars($user['password']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
     </div>
 </body>
 </html>

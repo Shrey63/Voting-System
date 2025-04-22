@@ -137,6 +137,8 @@ $secure = isset($_GET["secure"]); // Add ?secure=1 to enable secure mode
             <div class="comment">
                 <strong><?php echo $secure ? htmlspecialchars($row['name']) : $row['name']; ?></strong><br>
                 <?php echo $secure ? nl2br(htmlspecialchars($row['comment'])) : nl2br($row['comment']); ?>
+            <!-- &lt;script&gt;alert('XSS')&lt;/script&gt; in secure mode -->
+            <!-- <script>alert('XSS')</script> in insecure mode-->
             </div>
         <?php endwhile; ?>
     </div>
